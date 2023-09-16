@@ -1,23 +1,43 @@
-import { ButtonAdd } from "./components/Buttons"
-import { List } from "./components/List"
+import { createContext, useState } from "react";
+import { ButtonAdd } from "./components/Buttons";
+import Info from "./components/Info";
+import { List } from "./components/List";
+import Title from "./components/Title";
+
+type ContextPopUp = {
+  value: boolean;
+  setValue: React.Dispatch<React.SetStateAction<boolean>>;
+};
+export const ContextPopup = createContext<ContextPopUp | undefined>(undefined);
 
 function App() {
+  const [IsActive, setIsActive] = useState(false);
 
   return (
-    <div className='flex flex-col gap-5 w-full'>
-        <div className='text-center mt-5'>
-          <h1 className='text-2xl'>TEST YOUR BACKEND WITH THIS FRONTEND CRUD</h1>
-        </div>
+    <div className="flex flex-col gap-5 w-full">
+      <Title />
 
-        <div className='flex justify-end mr-5'>
-          <ButtonAdd />
-        </div>
+      <Info />
+      <ContextPopup.Provider
+        value={{
+          value: IsActive,
+          setValue: setIsActive,
+        }}
+      >
+        <ButtonAdd />
 
-          <List/>
-        
-
+        <List
+          render={(Box) => (
+            <>
+              {[...new Array(10).fill(0)].map((_, i) => {
+                return <Box key={i} />;
+              })}
+            </>
+          )}
+        />
+      </ContextPopup.Provider>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
