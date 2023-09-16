@@ -3,14 +3,15 @@ import { ContextPopup } from "../App"
 import { useForm } from "react-hook-form"
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import useFetch from "../hooks/useFetch";
+import { useAppDispatch } from "../hooks/useApp";
+import { add, update } from "../features/FormSlice";
 
-type FormType = {
-    name: string;
-    lastname: string;
-}
+
 
 const Form = () => {
 
+    const {Fetch} = useFetch<User[]>('')
     const PopupContext = useContext(ContextPopup)
     const formSchema = z.object({
         name: z.string().min(2).max(10),
@@ -21,9 +22,28 @@ const Form = () => {
     const {register, handleSubmit,formState:{errors}} = useForm<FormSchema>({
         resolver: zodResolver(formSchema)
     })
+    const dispatch = useAppDispatch()
+    const Submit = async (data:FormType) => {
+        if(PopupContext?.formValues?.id){ 
+           const response = await Fetch(`api/users/${PopupContext?.formValues?.id}`,{
+                method:'PUT',
+                body:JSON.stringify(data)
+            })
+            dispatch(update(response))
+            PopupContext?.setValue(false)
+            return 
+        }
+        const response = await Fetch('api/users',{
+            method:'POST',
+            body:JSON.stringify(data)
+        })
+        dispatch(add(response))
+        PopupContext?.setValue(false)
+    }
 
-    const Submit = (data:FormType) => {
-        console.log(data)
+    const Cancel = () => {
+        PopupContext?.setFormValues(null)
+        PopupContext?.setValue(false)
     }
 
     return (
@@ -33,6 +53,7 @@ const Form = () => {
             <input  
             {...register('name')}
             placeholder='name' 
+            defaultValue={PopupContext?.formValues?.name}
             className='p-1 rounded-md' />
             {
                 errors.name && <span className='text-[#303030]'>{errors.name.message}</span>
@@ -40,6 +61,7 @@ const Form = () => {
             <input 
             {...register('lastname')}
             placeholder='lastname' 
+            defaultValue={PopupContext?.formValues?.lastname}
             className='p-1 rounded-md' />
             {
                 errors.lastname && <span className='text-[#303030]'>{errors.lastname.message}</span>
@@ -49,7 +71,7 @@ const Form = () => {
             <button 
             type='button' 
             className='text-[#303030] p-1 pr-5 pl-5 rounded-md'
-            onClick={()=>PopupContext?.setValue(false)}
+            onClick={Cancel}
             >Close</button>
             </div>
         </form>
